@@ -104,13 +104,13 @@ public class XJParse {
     /** The main entry point */
     public static void main (String[] args) throws FileNotFoundException, IOException {
         XJParse parser = new XJParse();
-        parser.run(args);
+        parser.run3(args);
     }
 
-    public void run(String[] args) throws FileNotFoundException, IOException {
-        CmdLineParser cparser = new CmdLineParser(debug, args);
+    public void run3(String[] args) throws FileNotFoundException, IOException {
+        CmdLineParser argparser = new CmdLineParser(debug, args);
 
-        if (cparser.xmlfile == null && !cparser.fullChecking) {
+        if (argparser.xmlfile == null && !argparser.fullChecking) {
             // Hack
             System.out.println("Usage: com.nwalsh.parsers.xjparse [opts] xmlfile");
             System.out.println("");
@@ -131,26 +131,90 @@ public class XJParse {
             System.exit(1);
         }
 
-        Hashtable<String,String> schemaList = lookupSchemas(cparser.xsdFiles);
+        XJParser xjparser = new XJParser();
+
+        Hashtable<String,String> schemaList = lookupSchemas(argparser.xsdFiles);
+
+        ResolvingXMLReader reader = new ResolvingXMLReader();
+        Catalog catalog = reader.getCatalog();
+        for (int count = 0; count < argparser.catalogFiles.size(); count++) {
+            String file = (String) argparser.catalogFiles.elementAt(count);
+            catalog.parseCatalog(file);
+        }
+
+        xjparser.setDtdValidate(argparser.validating);
+        xjparser.setNamespaceAware(argparser.nsAware);
+        xjparser.setMaxMessages(argparser.maxErrs);
+        xjparser.setXsdValidate(argparser.useSchema || (!argparser.xsdFiles.isEmpty()));
+        xjparser.setSchemas(schemaList.values());
+
+        if (argparser.xmlfile != null) {
+            String parseType = argparser.validating ? "validating" : "well-formed";
+            String nsType = argparser.nsAware ? "namespace-aware" : "namespace-ignorant";
+            if (argparser.maxErrs > 0) {
+                System.out.println("Attempting "
+                        + parseType
+                        + ", "
+                        + nsType
+                        + " parse");
+            }
+            xjparser.parse(argparser.xmlfile);
+        } else {
+            System.exit(0);
+        }
+
+        xjparser.printParseStats();
+
+        if (xjparser.getErrorCount() > 0) {
+            System.exit(1);
+        }
+    }
+
+    public void run(String[] args) throws FileNotFoundException, IOException {
+        CmdLineParser argparser = new CmdLineParser(debug, args);
+
+        if (argparser.xmlfile == null && !argparser.fullChecking) {
+            // Hack
+            System.out.println("Usage: com.nwalsh.parsers.xjparse [opts] xmlfile");
+            System.out.println("");
+            System.out.println("Where:");
+            System.out.println("");
+            System.out.println("-c catalogfile   Load a particular catalog file");
+            System.out.println("-w               Perform a well-formed parse, not a validating parse");
+            System.out.println("-v               Perform a validating parse (the default)");
+            System.out.println("-s               Enable W3C XML Schema validation");
+            System.out.println("-S schema.xsd    Use schema.xsd for validation (implies -s)");
+            System.out.println("-f               Enable full schema checking (implies -s)");
+            System.out.println("-n               Perform a namespace-ignorant parse");
+            System.out.println("-N               Perform a namespace-aware parse (the default)");
+            System.out.println("-d integer       Set the debug level (warnings are level 2)");
+            System.out.println("-E integer       Set the maximum number of errors to display");
+            System.out.println("");
+            System.out.println("The process ends with error-level 1, if there are errors.");
+            System.exit(1);
+        }
+
+        Hashtable<String,String> schemaList = lookupSchemas(argparser.xsdFiles);
 
         ResolvingXMLReader reader = new ResolvingXMLReader();
 
         try {
-            cparser.nsAware = true;
-            reader.setFeature("http://xml.org/sax/features/namespaces", cparser.nsAware);
-            reader.setFeature("http://xml.org/sax/features/validation", cparser.validating);
-            if (cparser.useSchema) {
-                reader.setFeature(SCHEMA_VALIDATION_FEATURE_ID, cparser.useSchema);
-                reader.setFeature(SCHEMA_FULL_CHECKING_FEATURE_ID, cparser.fullChecking);
+            argparser.nsAware = true;
+            reader.setFeature("http://xml.org/sax/features/namespaces", argparser.nsAware);
+            reader.setFeature("http://xml.org/sax/features/validation", argparser.validating);
+
+            if (argparser.useSchema) {
+                reader.setFeature(SCHEMA_VALIDATION_FEATURE_ID, argparser.useSchema);
+                reader.setFeature(SCHEMA_FULL_CHECKING_FEATURE_ID, argparser.fullChecking);
                 if (schemaList != null) {
                     String slh = "";
                     String nons_slh = "";
-                    
+
                     for (String ns : schemaList.keySet()) {
                         String xsd = schemaList.get(ns);
                         if ("".equals(ns)) {
                             nons_slh = xsd;
-                            if (cparser.debuglevel > 0) {
+                            if (argparser.debuglevel > 0) {
                                 System.err.println("Hint: ''=" + xsd);
                             }
                         } else {
@@ -158,7 +222,7 @@ public class XJParse {
                                 slh = slh + " ";
                             }
                             slh = slh + ns + " " + xsd;
-                            if (cparser.debuglevel > 0) {
+                            if (argparser.debuglevel > 0) {
                                 System.err.println("Hint: " + ns + "=" + xsd);
                             }
                         }
@@ -179,22 +243,22 @@ public class XJParse {
 
         Catalog catalog = reader.getCatalog();
 
-        for (int count = 0; count < cparser.catalogFiles.size(); count++) {
-            String file = (String) cparser.catalogFiles.elementAt(count);
+        for (int count = 0; count < argparser.catalogFiles.size(); count++) {
+            String file = (String) argparser.catalogFiles.elementAt(count);
             catalog.parseCatalog(file);
         }
 
-        XParseError xpe = new XParseError(cparser.showErrors, cparser.showWarnings);
-        xpe.setMaxMessages(cparser.maxErrs);
+        XParseError xpe = new XParseError(argparser.showErrors, argparser.showWarnings);
+        xpe.setMaxMessages(argparser.maxErrs);
         reader.setErrorHandler(xpe);
 
         Date startTime = null;
 
         try {
-            if (cparser.xmlfile != null) {
-                String parseType = cparser.validating ? "validating" : "well-formed";
-                String nsType = cparser.nsAware ? "namespace-aware" : "namespace-ignorant";
-                if (cparser.maxErrs > 0) {
+            if (argparser.xmlfile != null) {
+                String parseType = argparser.validating ? "validating" : "well-formed";
+                String nsType = argparser.nsAware ? "namespace-aware" : "namespace-ignorant";
+                if (argparser.maxErrs > 0) {
                     System.out.println("Attempting "
                             + parseType
                             + ", "
@@ -202,7 +266,7 @@ public class XJParse {
                             + " parse");
                 }
                 startTime = new Date();
-                reader.parse(cparser.xmlfile);
+                reader.parse(argparser.xmlfile);
             } else {
                 System.exit(0);
             }
@@ -235,7 +299,7 @@ public class XJParse {
             mins = mins % 60;
         }
 
-        if (cparser.maxErrs > 0) {
+        if (argparser.maxErrs > 0) {
             System.out.print("Parse ");
             if (xpe.getFatalCount() > 0) {
                 System.out.print("failed ");

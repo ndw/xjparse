@@ -1,0 +1,10 @@
+<!ELEMENT doc (title, emphasis, p+)>
+<!ATTLIST doc
+	xmlns	CDATA	#FIXED "http://example.org/ns/document"
+>
+
+<!ELEMENT title (#PCDATA|emphasis)*>
+
+<!ELEMENT p (#PCDATA|emphasis)*>
+
+<!ELEMENT emphasis (#PCDATA|emphasis)*>
