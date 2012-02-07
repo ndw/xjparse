@@ -6,7 +6,6 @@
 package com.nwalsh.parsers;
 
 import java.util.Vector;
-import org.apache.xml.resolver.helpers.Debug;
 
 /**
  *
@@ -14,18 +13,15 @@ import org.apache.xml.resolver.helpers.Debug;
  */
 public class CmdLineParser {
     String  xmlfile    = null;
-    int     debuglevel = 0;
     int     maxErrs    = 10;
     boolean nsAware    = true;
-    boolean validating = true;
+    boolean validating = false;
     boolean useSchema  = false;
-    boolean showWarnings = (debuglevel > 2);
-    boolean showErrors = true;
     boolean fullChecking = false; // true implies useSchema
     Vector<String> xsdFiles = new Vector<String> ();
     Vector<String> catalogFiles = new Vector<String> ();
 
-    public CmdLineParser(Debug debug, String[] args) {
+    public CmdLineParser(String[] args) {
         for (int i=0; i<args.length; i++) {
             if (args[i].equals("-c")) {
                 ++i;
@@ -33,6 +29,7 @@ public class CmdLineParser {
                 continue;
             }
 
+            // Ignored for legacy reasons
             if (args[i].equals("-w")) {
                 validating = false;
                 continue;
@@ -68,23 +65,6 @@ public class CmdLineParser {
 
             if (args[i].equals("-N")) {
                 nsAware = true;
-                continue;
-            }
-
-            if (args[i].equals("-d")) {
-                ++i;
-                String debugstr = args[i];
-                try {
-                    debuglevel = Integer.parseInt(debugstr);
-                    if (debuglevel >= 0) {
-                        if (debug != null) {
-                            debug.setDebug(debuglevel);
-                        }
-                        showWarnings = (debuglevel > 2);
-                    }
-                } catch (Exception e) {
-                    System.err.println("Not an integer: "+debugstr+" after -d");
-                }
                 continue;
             }
 
