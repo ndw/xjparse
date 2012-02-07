@@ -1,0 +1,7 @@
+<doc xmlns="http://example.org/ns/document"
+     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+     xsi:schemaLocation="http://example.org/ns/document ../schema/doc.xsd">
+<title>Document Title</title>
+<xsdextra/>
+<p>This is some <emphasis>text</emphasis>.</p>
+</doc>

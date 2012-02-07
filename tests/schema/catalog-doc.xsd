@@ -5,11 +5,7 @@
 
   <xs:import namespace="http://www.w3.org/XML/1998/namespace" schemaLocation="xml.xsd"/>
 
-  <xs:attributeGroup name="common.attributes">
-    <xs:attribute ref="xml:id"/>
-    <xs:attribute ref="xml:lang"/>
-    <xs:attribute ref="xml:base"/>
-  </xs:attributeGroup>
+  <xs:include schemaLocation="http://example.com/catalog-common.xsd"/>
 
   <xs:group name="all.inlines">
     <xs:choice>

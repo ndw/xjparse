@@ -1,0 +1,19 @@
+<catalog xmlns="urn:oasis:names:tc:entity:xmlns:xml:catalog"
+         prefer="public">
+
+  <system systemId="http://example.com/doc.dtd"
+          uri="../schema/doc.dtd"/>
+
+  <system systemId="http://example.com/catalog-doc.xsd"
+          uri="../schema/catalog-doc.xsd"/>
+
+  <uri    name="http://example.com/catalog-doc.xsd"
+          uri="../schema/catalog-doc.xsd"/>
+
+  <uri    name="http://example.com/catalog-common.xsd"
+          uri="../schema/catalog-common.xsd"/>
+
+  <system systemId="http://example.com/catalog-common.xsd"
+          uri="../schema/catalog-common.xsd"/>
+
+</catalog>
