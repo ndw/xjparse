@@ -1,8 +1,10 @@
 package com.nwalsh.parsers;
 
-import org.xml.sax.ErrorHandler;
+import org.xml.sax.InputSource;
+import org.xml.sax.SAXException;
 import org.xml.sax.SAXParseException;
 import org.xml.sax.helpers.DefaultHandler;
+import org.xmlresolver.Resolver;
 
 import javax.xml.XMLConstants;
 import javax.xml.parsers.SAXParser;
@@ -10,6 +12,7 @@ import javax.xml.parsers.SAXParserFactory;
 import javax.xml.transform.stream.StreamSource;
 import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
+import java.io.IOException;
 import java.util.Collection;
 import java.util.Date;
 
@@ -45,6 +48,7 @@ public class XJParser {
     private XParseError errhandler = new XParseError();
     private Date startTime = null;
     private Date endTime = null;
+    private Resolver resolver = null;
 
 
     public XJParser() {
@@ -58,6 +62,7 @@ public class XJParser {
     public void setSchemas(Collection<String> schemas) { this.schemas = schemas; }
     public void setXSD11(boolean use11) { xsd11 = use11; }
     public void setMaxMessages(int errors) { errhandler.setMaxMessages(errors); }
+    public void setResolver(Resolver resolver) { this.resolver = resolver; }
     public int getErrorCount() { return errhandler.getErrorCount(); }
     
     public boolean parse(String doc) {
@@ -78,13 +83,18 @@ public class XJParser {
                 StreamSource stream = new StreamSource(suri);
                 sources[pos] = stream;
             }
-        } else {
-            sources = new StreamSource[0];
         }
 
         try {
             SchemaFactory factory = SchemaFactory.newInstance(xsd11 ? XSD11 : XMLConstants.W3C_XML_SCHEMA_NS_URI);
-            Schema schema = factory.newSchema(sources);
+            factory.setResourceResolver(resolver);
+            Schema schema = null;
+            
+            if (sources == null) {
+                schema = factory.newSchema();
+            } else {
+                schema = factory.newSchema(sources);
+            }
 
             /** Setup SAX parser for schema validation. */
             SAXParserFactory spf = SAXParserFactory.newInstance();
@@ -198,6 +208,10 @@ public class XJParser {
 
         public void warning(SAXParseException spe) throws SAXParseException {
             errhandler.warning(spe);
+        }
+
+        public InputSource resolveEntity(String publicId, String systemId) throws IOException, SAXException {
+            return resolver.resolveEntity(publicId, systemId);
         }
     }
 }
