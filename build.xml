@@ -1,20 +1,32 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project name="xjparse" default="default" basedir=".">
-    <description>Builds, tests, and runs xjparse</description>
+  <description>Builds, tests, and runs xjparse</description>
 
-    <property name="tmp.dir" value="."/>
-    <property name="build.dir" value="${tmp.dir}/build"/>
-    <property name="build.classes.dir" value="${build.dir}/classes"/>
-    <property name="build.docs.dir" value="${build.dir}/docs"/>
-    <property name="build.lib.dir" value="${build.dir}/lib"/>
-    <property name="build.tests.dir" value="${build.dir}/tests"/>
-    <property name="lib.dir" value="lib"/>
+  <property file="resources/vendor.properties"/>
+  <property file="resources/version.properties"/>
 
-    <path id="xjparse.classpath">
-      <pathelement location="${lib.dir}/resolver.jar"/>
-      <pathelement location="${lib.dir}/xml-apis.jar"/>
-      <pathelement location="${lib.dir}/xercesImpl.jar"/>
+  <property name="tmp.dir" value="."/>
+  <property name="build.dir" value="${tmp.dir}/build"/>
+  <property name="build.classes.dir" value="${build.dir}/classes"/>
+  <property name="build.docs.dir" value="${build.dir}/docs"/>
+  <property name="build.lib.dir" value="${build.dir}/lib"/>
+  <property name="build.jar" value="${build.dir}/xjparse.jar"/>
+  <property name="build.tests.dir" value="${build.dir}/tests"/>
+  <property name="lib.dir" value="lib"/>
+
+  <property name="version" value="${version.major}.${version.minor}.${version.release}"/>
+  <property name="dist.version" value="${version}"/>
+  <property name="dist.dir" value="${build.dir}/xjparse-${dist.version}"/>
+
+    <path id="build.classpath">
+      <fileset dir="${lib.dir}">
+        <include name="*.jar"/>
+      </fileset>
     </path>
+
+    <pathconvert property="run.classpath" refid="build.classpath" pathsep=" ">
+      <map from="${basedir}/" to=""/>
+    </pathconvert>
 
     <property name="src.dir" value="src" />
 
@@ -36,7 +48,7 @@
       <echo message="Compiling classes..." />
       <javac srcdir="${src.dir}" destdir="${build.classes.dir}"
              deprecation="${build.deprecation}" includeantruntime="false">
-        <classpath refid="xjparse.classpath"/>
+        <classpath refid="build.classpath"/>
       </javac>
     </target>
 
@@ -56,16 +68,24 @@
                windowtitle="xjparse"
                doctitle="xml:id"
                bottom="${copyright.message}">
-        <classpath refid="xjparse.classpath"/>
+        <classpath refid="build.classpath"/>
         <package name="com.nwalsh.parsers"/>
       </javadoc>
     </target>
 
   <target name="jar" depends="compile" description="Jar all classes">
     <echo message="Jarring xjparse.jar from ${build.classes.dir}" />
-    <jar jarfile="${build.lib.dir}/xjparse.jar"
-	 manifest="${src.dir}/manifest"
-         basedir="${build.classes.dir}"/>
+    <jar destfile="${build.jar}"
+         basedir="${build.classes.dir}">
+      <manifest>
+	<attribute name="Implementation-Vendor" value="${implementation.vendor}"/>
+	<attribute name="Implementation-Title" value="${implementation.title}"/>
+        <attribute name="Implementation-URL" value="${implementation.url}"/>
+	<attribute name="Implementation-Version" value="1.5.0"/>
+        <attribute name="Main-Class" value="com.nwalsh.parsers.XJParse"/>
+        <attribute name="Class-Path" value="${run.classpath}"/>
+      </manifest>
+    </jar>
   </target>
 
   <target name="test" depends="jar" description="Test parser">
@@ -74,7 +94,7 @@
     <java fork="true" classname="com.nwalsh.parsers.XJParse">
       <classpath>
         <pathelement location="${build.lib.dir}/xjparse.jar"/>
-        <path refid="xjparse.classpath"/>
+        <path refid="build.classpath"/>
       </classpath>
       <arg value="-f"/>
       <arg value="-S"/>
@@ -86,9 +106,45 @@
   <target name="init">
     <mkdir dir="${build.dir}" />
     <mkdir dir="${build.classes.dir}" />
+    <mkdir dir="${build.classes.dir}/etc" />
     <mkdir dir="${build.docs.dir}" />
     <mkdir dir="${build.lib.dir}" />
     <mkdir dir="${build.tests.dir}" />
+
+    <copy todir="${build.classes.dir}/etc">
+      <fileset file="resources/version.properties"/>
+    </copy>
+  </target>
+
+  <target name="dist" depends="jar,docs">
+    <mkdir dir="${dist.dir}"/>
+    <mkdir dir="${dist.dir}/lib"/>
+    <mkdir dir="${dist.dir}/tests"/>
+    <mkdir dir="${dist.dir}/docs"/>
+    <mkdir dir="${dist.dir}/docs/apidocs"/>
+    <mkdir dir="${dist.dir}/docs/notices"/>
+
+    <copy todir="${dist.dir}/lib">
+      <fileset dir="lib"/>
+    </copy>
+
+    <copy todir="${dist.dir}/docs/apidocs">
+      <fileset dir="${build.dir}/apidocs"/>
+    </copy>
+
+    <copy todir="${dist.dir}/docs/notices">
+      <fileset dir="resources/notices"/>
+    </copy>
+
+    <copy todir="${dist.dir}/tests">
+      <fileset dir="tests">
+        <exclude name="*~"/>
+      </fileset>
+    </copy>
+
+    <copy todir="${dist.dir}">
+      <fileset file="${build.jar}"/>
+    </copy>
   </target>
 
   <target name="clean"
