@@ -10,7 +10,7 @@
   <property name="build.classes.dir" value="${build.dir}/classes"/>
   <property name="build.docs.dir" value="${build.dir}/docs"/>
   <property name="build.lib.dir" value="${build.dir}/lib"/>
-  <property name="build.jar" value="${build.dir}/xjparse.jar"/>
+  <property name="build.jar" value="${build.lib.dir}/xjparse.jar"/>
   <property name="build.tests.dir" value="${build.dir}/tests"/>
   <property name="lib.dir" value="lib"/>
 
@@ -98,7 +98,7 @@
       </classpath>
       <arg value="-f"/>
       <arg value="-S"/>
-      <arg value="tests/doc.xsd"/>
+      <arg value="tests/schema/doc.xsd"/>
       <arg value="tests/sample.xml"/>
     </java>
   </target>
@@ -144,6 +144,10 @@
 
     <copy todir="${dist.dir}">
       <fileset file="${build.jar}"/>
+    </copy>
+
+    <copy todir="${dist.dir}">
+      <fileset file="README.md"/>
     </copy>
   </target>
 
