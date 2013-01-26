@@ -1,5 +1,5 @@
-This notice is included in the distribution of XML Calabash because
-the XML Calabash distribution includes a copy of commons-logging-1.1.1.jar
+This notice is included in the distribution of XJParse because the
+XJParse distribution includes a copy of commons-httpclient-3.1.jar.
 Source code, documentation, and further resources are available from
 http://commons.apache.org/logging/
 
