@@ -22,9 +22,20 @@ The process ends with error-level 1 if there are errors, 0 otherwise.
 
 # Testing
 
-Running `ant test` will demonstrate the results.
+Running the following command:
+
+    java -cp xjparse.jar com.nwalsh.parsers.XJParse -f -S tests/schema/doc.xsd tests/sample.xml
+
+will demonstrate the results. If checked out the sources, you can
+run this command with `ant test`.
 
 # Xerces libraries
 
-For convenience, libraries from Xerces 2.11.0 are included in the `lib` directory;
-you can ignore those or replace them with any recent version of the Xerces instead.
+For convenience, several libraries are included in the `lib`
+directory; you can ignore those or replace them with corresponding,
+perhaps more recent, libraries if you wish.
+
+# Contact
+
+If you have questions or comments about `xjparse`, please visit
+<http://github.com/ndw/xjparse> for contact details or to report issues.
