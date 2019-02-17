@@ -1,6 +1,0 @@
-Manifest-Version: 1.0
-
-Name: com/nwalsh/parsers
-Comment: XJParse
-Implementation-Vendor: Norman Walsh
-Implementation-URL: https://github.com/ndw/xmlidfilter/
