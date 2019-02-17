@@ -35,8 +35,9 @@ public class XJParser {
     private boolean xsdValidate = true;
     private boolean xsd11 = false;
     private boolean fullChecking = false;
-    private int debug = 0;
-    private int maxMessages = 0;
+    private boolean debug = false;
+    private boolean quiet = false;
+    private int maxMessages = 10;
     private Collection<String> schemas = null;
     private XParseError errhandler = null;
     private Date startTime = null;
@@ -52,7 +53,8 @@ public class XJParser {
     public void setXsdValidate(boolean validate) { xsdValidate = validate; }
     public void setNamespaceAware(boolean aware) { nsAware = aware; }
     public void setFullChecking(boolean full) { fullChecking = full; }
-    public void setDebug(int dbg) { debug = dbg; }
+    public void setDebug(boolean dbg) { debug = dbg; }
+    public void setQuiet(boolean q) { quiet = q; }
     public void setSchemas(Collection<String> schemas) { this.schemas = schemas; }
     public void setXSD11(boolean use11) { xsd11 = use11; }
     public void setMaxMessages(int errors) { maxMessages = errors; }
@@ -60,7 +62,7 @@ public class XJParser {
     public int getErrorCount() { return errhandler.getErrorCount(); }
     
     public boolean parse(String doc) {
-        errhandler = new XParseError(debug > 0);
+        errhandler = new XParseError(!quiet);
         errhandler.setMaxMessages(maxMessages);
 
         if (xsdValidate) {
@@ -104,9 +106,9 @@ public class XJParser {
             doParse(doc, spf);
         } catch (Exception e) {
             valid = false;
-            if (debug > 1) {
+            if (debug) {
                 e.printStackTrace();
-            } else if (debug > 0) {
+            } else if (!quiet) {
                 System.err.println(e.toString());
             }
         }
@@ -132,9 +134,9 @@ public class XJParser {
             endTime = new Date();
         } catch (Exception e) {
             valid = false;
-            if (debug > 1) {
+            if (debug) {
                 e.printStackTrace();
-            } else if (debug > 0) {
+            } else if (!quiet) {
                 System.err.println(e.toString());
             }
         }

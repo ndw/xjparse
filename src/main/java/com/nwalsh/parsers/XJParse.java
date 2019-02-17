@@ -100,10 +100,10 @@ public class XJParse {
             System.out.println("-s               Enable W3C XML Schema validation");
             System.out.println("-S schema.xsd    Use schema.xsd for validation (implies -s)");
             System.out.println("-f               Enable full schema checking (implies -s)");
-            System.out.println("-n               Perform a namespace-ignorant parse");
-            System.out.println("-N               Perform a namespace-aware parse (the default)");
+            System.out.println("-n               Perform a namespace-ignorant parse (namespace aware by default)");
             System.out.println("-E integer       Set the maximum number of errors to display");
             System.out.println("-d               Debug (dump stack trace on exception)");
+            System.out.println("-q               Quiet mode; don't print errors and warnings");
             System.out.println("");
             System.out.println("The process ends with error-level 1, if there are errors.");
             System.exit(1);
