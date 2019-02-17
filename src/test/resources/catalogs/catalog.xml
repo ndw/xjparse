@@ -4,6 +4,9 @@
   <system systemId="http://example.com/doc.dtd"
           uri="../schema/doc.dtd"/>
 
+  <system systemId="http://example.com/doc.xsd"
+          uri="../schema/doc.xsd"/>
+
   <system systemId="http://example.com/catalog-doc.xsd"
           uri="../schema/catalog-doc.xsd"/>
 
@@ -15,5 +18,4 @@
 
   <system systemId="http://example.com/catalog-common.xsd"
           uri="../schema/catalog-common.xsd"/>
-
 </catalog>

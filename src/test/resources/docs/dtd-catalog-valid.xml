@@ -1,6 +1,5 @@
-<!DOCTYPE doc SYSTEM "../schema/doc.dtd">
+<!DOCTYPE doc SYSTEM "http://example.com/schema/doc.dtd">
 <doc xmlns="http://example.org/ns/document">
 <title>Document Title</title>
-<dtdextra/>
 <p>This is some <emphasis>text</emphasis>.</p>
 </doc>

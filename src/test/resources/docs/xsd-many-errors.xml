@@ -1,0 +1,6 @@
+<doc xmlns="http://example.org/ns/document">
+<title>Document Title</title>
+<error/>
+<p>This is some <emphasis not-allowed="1">text</emphasis>.</p>
+no text here
+</doc>

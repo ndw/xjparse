@@ -22,9 +22,7 @@ package com.nwalsh.parsers;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.Hashtable;
-import java.util.Properties;
 import java.util.Vector;
 
 import org.xml.sax.SAXException;
@@ -81,14 +79,14 @@ import org.xmlresolver.Resolver;
  * @version 1.0
  */
 public class XJParse {
-    public static final String VERSION = initializeVersion();
+    private static final String VERSION = BuildConfig.VERSION;
 
     public static void main (String[] args) throws FileNotFoundException, IOException {
         XJParse parser = new XJParse();
         parser.run(args);
     }
 
-    public void run(String[] args) throws FileNotFoundException, IOException {
+    private void run(String[] args) throws FileNotFoundException, IOException {
         CmdLineParser argparser = new CmdLineParser(args);
 
         if (argparser.xmlfile == null && !argparser.fullChecking) {
@@ -102,9 +100,10 @@ public class XJParse {
             System.out.println("-s               Enable W3C XML Schema validation");
             System.out.println("-S schema.xsd    Use schema.xsd for validation (implies -s)");
             System.out.println("-f               Enable full schema checking (implies -s)");
-            System.out.println("-n               Perform a namespace-ignorant parse");
-            System.out.println("-N               Perform a namespace-aware parse (the default)");
+            System.out.println("-n               Perform a namespace-ignorant parse (namespace aware by default)");
             System.out.println("-E integer       Set the maximum number of errors to display");
+            System.out.println("-d               Debug (dump stack trace on exception)");
+            System.out.println("-q               Quiet mode; don't print errors and warnings");
             System.out.println("");
             System.out.println("The process ends with error-level 1, if there are errors.");
             System.exit(1);
@@ -114,19 +113,20 @@ public class XJParse {
 
         Hashtable<String,String> schemaList = lookupSchemas(argparser.xsdFiles);
 
-        String catalogList = null;
+        StringBuilder catalogList = new StringBuilder();
+        int catCount = 0;
         for (String catalogFile : argparser.catalogFiles) {
-            if (catalogList == null) {
-                catalogList = catalogFile;
-            } else {
-                catalogList += ";" + catalogFile; 
+            if (catCount > 0) {
+                catalogList.append(";");
             }
+            catCount += 1;
+            catalogList.append(catalogFile);
         }
 
         Resolver resolver = null;
         
-        if (catalogList != null) {
-            Catalog catalog = new Catalog(catalogList);
+        if (catCount > 0) {
+            Catalog catalog = new Catalog(catalogList.toString());
             resolver = new Resolver(catalog);
         } else {
             resolver = new Resolver();
@@ -137,6 +137,7 @@ public class XJParse {
         xjparser.setMaxMessages(argparser.maxErrs);
         xjparser.setXsdValidate(argparser.useSchema || (!argparser.xsdFiles.isEmpty()));
         xjparser.setFullChecking(argparser.fullChecking);
+        xjparser.setDebug(argparser.debug);
         xjparser.setResolver(resolver);
 
         if (schemaList.size() > 0) {
@@ -177,7 +178,7 @@ public class XJParse {
 
             for (String xsd : xsdFiles) {
                 // Hack. Spaces will cause Xerces to fall over.
-                xsd = xsd.replaceAll(" ","%20");
+                xsd = xsd.replaceAll(" ", "%20");
 
                 Document doc = db.parse(xsd);
                 Element s = doc.getDocumentElement();
@@ -188,7 +189,7 @@ public class XJParse {
                 //
                 // Would use doc.getBaseURI(), but it doesn't have one!?
                 xsd = s.getBaseURI();
-                
+
                 String targetNS = s.getAttribute("targetNamespace");
                 if (targetNS == null || "".equals(targetNS)) {
                     mapping.put("", xsd);
@@ -196,35 +197,12 @@ public class XJParse {
                     mapping.put(targetNS, xsd);
                 }
             }
-        } catch (ParserConfigurationException pce) {
+        }  catch (FileNotFoundException fnf) {
+            System.err.println(fnf.toString());
+        } catch (ParserConfigurationException | SAXException | IOException pce) {
             pce.printStackTrace();
-        } catch (SAXException se) {
-            se.printStackTrace();
-        } catch (IOException ioe) {
-            ioe.printStackTrace();
         }
 
         return mapping;
-    }
-
-    private static String initializeVersion() {
-        Properties config = new Properties();
-        InputStream stream = null;
-        try {
-            stream = XJParse.class.getResourceAsStream("/etc/version.properties");
-            if (stream == null) {
-                throw new UnsupportedOperationException("JAR file doesn't contain version.properties file!?");
-            }
-            config.load(stream);
-            String major = config.getProperty("version.major");
-            String minor = config.getProperty("version.minor");
-            String release = config.getProperty("version.release");
-            if (major == null || minor == null || release == null) {
-                throw new UnsupportedOperationException("Invalid version.properties in JAR file!?");
-            }
-            return major + "." + minor + "." + release;
-        } catch (IOException ioe) {
-            throw new UnsupportedOperationException("No version.properties in JAR file!?");
-        }
     }
 }

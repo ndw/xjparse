@@ -26,17 +26,8 @@ import java.util.Date;
 public class XJParser {
     private static final String XSD11 = "http://www.w3.org/XML/XMLSchema/v1.1";
 
-    protected static final String SCHEMA_VALIDATION_FEATURE_ID
-            = "http://apache.org/xml/features/validation/schema";
-
     protected static final String SCHEMA_FULL_CHECKING_FEATURE_ID
             = "http://apache.org/xml/features/validation/schema-full-checking";
-
-    protected static final String EXTERNAL_SCHEMA_LOCATION_PROPERTY_ID
-            = "http://apache.org/xml/properties/schema/external-schemaLocation";
-
-    protected static final String EXTERNAL_NONS_SCHEMA_LOCATION_PROPERTY_ID
-            = "http://apache.org/xml/properties/schema/external-noNamespaceSchemaLocation";
 
     private boolean valid = true;
     private boolean nsAware = true;
@@ -44,8 +35,11 @@ public class XJParser {
     private boolean xsdValidate = true;
     private boolean xsd11 = false;
     private boolean fullChecking = false;
+    private boolean debug = false;
+    private boolean quiet = false;
+    private int maxMessages = 10;
     private Collection<String> schemas = null;
-    private XParseError errhandler = new XParseError();
+    private XParseError errhandler = null;
     private Date startTime = null;
     private Date endTime = null;
     private Resolver resolver = null;
@@ -59,13 +53,18 @@ public class XJParser {
     public void setXsdValidate(boolean validate) { xsdValidate = validate; }
     public void setNamespaceAware(boolean aware) { nsAware = aware; }
     public void setFullChecking(boolean full) { fullChecking = full; }
+    public void setDebug(boolean dbg) { debug = dbg; }
+    public void setQuiet(boolean q) { quiet = q; }
     public void setSchemas(Collection<String> schemas) { this.schemas = schemas; }
     public void setXSD11(boolean use11) { xsd11 = use11; }
-    public void setMaxMessages(int errors) { errhandler.setMaxMessages(errors); }
+    public void setMaxMessages(int errors) { maxMessages = errors; }
     public void setResolver(Resolver resolver) { this.resolver = resolver; }
     public int getErrorCount() { return errhandler.getErrorCount(); }
     
     public boolean parse(String doc) {
+        errhandler = new XParseError(!quiet);
+        errhandler.setMaxMessages(maxMessages);
+
         if (xsdValidate) {
             return xsdParse(doc);
         } else {
@@ -82,6 +81,7 @@ public class XJParser {
             for (String suri : schemas) {
                 StreamSource stream = new StreamSource(suri);
                 sources[pos] = stream;
+                pos += 1;
             }
         }
 
@@ -89,53 +89,64 @@ public class XJParser {
             SchemaFactory factory = SchemaFactory.newInstance(xsd11 ? XSD11 : XMLConstants.W3C_XML_SCHEMA_NS_URI);
             factory.setResourceResolver(resolver);
             Schema schema = null;
-            
+
             if (sources == null) {
                 schema = factory.newSchema();
             } else {
                 schema = factory.newSchema(sources);
             }
 
-            /** Setup SAX parser for schema validation. */
+            /* Setup SAX parser for schema validation. */
             SAXParserFactory spf = SAXParserFactory.newInstance();
             spf.setNamespaceAware(nsAware);
             spf.setValidating(dtdValidate);
             spf.setSchema(schema);
 
             spf.setFeature(SCHEMA_FULL_CHECKING_FEATURE_ID, fullChecking);
-
-            valid = true;
-            SAXParser parser = spf.newSAXParser();
-            startTime = new Date();
-            parser.parse(doc, new ParseHandler());
-            endTime = new Date();
+            doParse(doc, spf);
         } catch (Exception e) {
-            e.printStackTrace();
+            valid = false;
+            if (debug) {
+                e.printStackTrace();
+            } else if (!quiet) {
+                System.err.println(e.toString());
+            }
         }
-        
+
         return valid;
     }
 
     public boolean dtdParse(String doc) {
-        try {
-            /** Setup SAX parser for DTD validation. */
-            SAXParserFactory spf = SAXParserFactory.newInstance();
-            spf.setNamespaceAware(nsAware);
-            spf.setValidating(dtdValidate);
+        /* Setup SAX parser for DTD validation. */
+        SAXParserFactory spf = SAXParserFactory.newInstance();
+        spf.setNamespaceAware(nsAware);
+        spf.setValidating(dtdValidate);
+        doParse(doc, spf);
+        return valid;
+    }
 
+    private void doParse(String doc, SAXParserFactory spf) {
+        try {
             valid = true;
             SAXParser parser = spf.newSAXParser();
             startTime = new Date();
             parser.parse(doc, new ParseHandler());
             endTime = new Date();
         } catch (Exception e) {
-            e.printStackTrace();
+            valid = false;
+            if (debug) {
+                e.printStackTrace();
+            } else if (!quiet) {
+                System.err.println(e.toString());
+            }
         }
-
-        return valid;
     }
 
     public void printParseStats() {
+        if (startTime == null || endTime == null) {
+            return;
+        }
+
         long millisec = endTime.getTime() - startTime.getTime();
         long secs = 0;
         long mins = 0;
@@ -199,10 +210,12 @@ public class XJParser {
     
     private class ParseHandler extends DefaultHandler {
         public void fatalError(SAXParseException spe) throws SAXParseException {
+            valid = false;
             errhandler.fatalError(spe);
         }
 
         public void error(SAXParseException spe) throws SAXParseException {
+            valid = false;
             errhandler.error(spe);
         }
 
@@ -211,7 +224,11 @@ public class XJParser {
         }
 
         public InputSource resolveEntity(String publicId, String systemId) throws IOException, SAXException {
-            return resolver.resolveEntity(publicId, systemId);
+            if (resolver != null) {
+                return resolver.resolveEntity(publicId, systemId);
+            } else {
+                return null;
+            }
         }
     }
 }
