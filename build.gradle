@@ -1,0 +1,89 @@
+buildscript {
+  repositories {
+    maven {
+      url "https://plugins.gradle.org/m2/"
+    }
+  }
+  dependencies {
+    classpath "biz.aQute.bnd:biz.aQute.bnd.gradle:4.1.0"
+    classpath 'gradle.plugin.de.fuerstenau:BuildConfigPlugin:1.1.8'
+  }
+}
+
+plugins {
+  id "java"
+  id "maven"
+  id 'de.fuerstenau.buildconfig' version '1.1.8'
+}
+
+apply plugin: "biz.aQute.bnd.builder"
+apply plugin: 'idea'
+
+import aQute.bnd.gradle.Bundle
+
+repositories {
+  mavenLocal()
+  mavenCentral()
+}
+
+configurations.all {
+  resolutionStrategy {
+    force 'xml-apis:xml-apis:1.4.01'
+  }
+}
+
+dependencies {
+  compile (
+    [group: 'org.apache.httpcomponents', name: 'httpclient', version: '4.5.2'],
+    [group: 'org.apache.httpcomponents', name: 'httpcore', version: '4.4.5'],
+    [group: 'org.apache.logging.log4j', name: 'log4j-api', version: '2.1'],
+    [group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.1'],
+    [group: 'org.apache.logging.log4j', name: 'log4j-slf4j-impl', version: '2.1'],
+    [group: 'org.slf4j', name: 'jcl-over-slf4j', version: '1.7.10'],
+    [group: 'org.slf4j', name: 'slf4j-api', version: '1.7.10'],
+    [group: 'org.xmlresolver', name: 'xmlresolver', version: '0.13.1'],
+  )
+  testCompile (
+    [group: 'junit', name: 'junit', version: '4.12']
+  )
+}
+
+buildConfig {
+    appName = project.name
+    version = project.version
+    clsName = 'BuildConfig'
+    packageName = "com.nwalsh.parsers"
+    charset = 'UTF-8'
+}
+
+compileJava {
+    options.compilerArgs += ['-Xlint:deprecation']
+}
+
+test {
+    testLogging.showStandardStreams = false
+}
+
+jar {
+  baseName "xjparse"
+  bnd ('Built-By': 'Norman Walsh',
+       'Implementation-Vendor': 'Norman Walsh',
+       'Implementation-Title': 'XJParse',
+       'Implementation-Version': "2.0.2",
+       'Main-Class': 'com.nwalsh.parsers.XJParse')
+}
+
+task fatJar(type: Jar) {
+  manifest {
+    attributes 'Main-Class': 'com.nwalsh.parsers.XJParse'
+  }
+  baseName = 'xjparse-app'
+  from {
+    configurations.compile.collect { it.isDirectory() ? it : zipTree(it) }
+  }
+  with jar
+}
+
+task bundle(type: Bundle) {
+  from sourceSets.main.output
+}
