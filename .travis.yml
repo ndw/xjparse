@@ -1,2 +1,14 @@
 language: java
-script: gradle test
+script: gradle dist
+
+deploy:
+  provider: releases
+  api_key:
+    secure: ewxjAmei2p2hLsw7GzDEmcIy2G1xis6HZ0kQZLlRzpdJHvTKm+jICdnn9d7sCoq59s8HUab2JO+fIOCo6yvuVNe6W/Ve+sa0kN622Egzr6QtRfqJossgcdsteDAx8q47gpWQTL83T/elKJlZsLedAoqziH+l9MePkRJAi+3LJao=
+  file:
+    - build/dist/xjparse-$TRAVIS_TAG.jar
+    - build/dist/xjparse-app-$TRAVIS_TAG.jar
+  skip_cleanup: true
+  on:
+    tags: true
+    all_branches: true

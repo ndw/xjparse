@@ -87,3 +87,11 @@ task fatJar(type: Jar) {
 task bundle(type: Bundle) {
   from sourceSets.main.output
 }
+
+task dist(dependsOn: ["test", "jar", "fatJar"], type: Copy) {
+  from "build/libs"
+  into "build/dist"
+  doFirst {
+    mkdir "build/dist"
+  }
+}
