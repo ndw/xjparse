@@ -18,6 +18,7 @@ public class CmdLineParser {
     boolean validating = false;
     boolean useSchema  = false;
     boolean fullChecking = false; // true implies useSchema
+    int debug = 0;
     Vector<String> xsdFiles = new Vector<String> ();
     Vector<String> catalogFiles = new Vector<String> ();
 
@@ -65,6 +66,11 @@ public class CmdLineParser {
 
             if (args[i].equals("-N")) {
                 nsAware = true;
+                continue;
+            }
+
+            if (args[i].equals("-d")) {
+                debug += 1;
                 continue;
             }
 

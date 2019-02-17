@@ -15,10 +15,7 @@ import java.net.URL;
  */
 public class XParseError implements ErrorHandler {
     /** Show errors? */
-    private boolean showErrors = true;
-
-    /** Show warnings? */
-    private boolean showWarnings = true;
+    private boolean showMessages = false;
 
     /** How many messages should be presented? */
     private int maxMessages = 10;
@@ -36,7 +33,9 @@ public class XParseError implements ErrorHandler {
     private String baseURI = "";
 
     /** Constructor */
-    public XParseError() {
+    public XParseError(boolean showMsgs) {
+        showMessages = showMsgs;
+
         String dir = System.getProperty("user.dir");
         String file = "";
 
@@ -81,7 +80,7 @@ public class XParseError implements ErrorHandler {
 
     /** SAX2 API */
     public void error(SAXParseException exception) {
-        if (showErrors) {
+        if (showMessages) {
             if (errorCount+warningCount < maxMessages) {
                 message("Error", exception);
             }
@@ -91,7 +90,7 @@ public class XParseError implements ErrorHandler {
 
     /** SAX2 API */
     public void fatalError(SAXParseException exception) {
-        if (showErrors) {
+        if (showMessages) {
             if (errorCount+warningCount < maxMessages) {
                 message("Fatal error", exception);
             }
@@ -102,7 +101,7 @@ public class XParseError implements ErrorHandler {
 
     /** SAX2 API */
     public void warning(SAXParseException exception) {
-        if (showWarnings) {
+        if (showMessages) {
             if ((errorCount+warningCount < maxMessages)) {
                 message("Warning", exception);
             }
